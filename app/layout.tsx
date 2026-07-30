@@ -9,8 +9,8 @@ const plusJakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Directorio Médico Ecuador | Verificado por SENESCYT",
-  description: "Conecta con médicos ecuatorianos certificados y verificados ante el SENESCYT. Agendamiento directo y seguro.",
+  title: "NEOSDOC | El directorio médico que conecta a Ecuador con la salud",
+  description: "Conectamos médicos, impulsamos soluciones. Encuentra al médico ideal cerca de ti, verificado ante SENESCYT. Perfil 100% gratuito para médicos.",
 };
 
 export default function RootLayout({
