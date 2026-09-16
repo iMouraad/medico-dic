@@ -3,11 +3,33 @@
 :root {
   --background: #f8fafc;
   --foreground: #0f172a;
+
+  /* Paleta oficial NEOSDOC — ver Documentos/IMAGENES DE REFERENCIA/Paleta_Colores_Perfil_NEOSDOC.docx */
+  --brand-blue-dark: #002174;    /* textos principales, header, logo */
+  --brand-blue: #003FA3;         /* textos secundarios, insignia Médico Fundador */
+  --brand-turquoise: #01B5BD;    /* botón "Agendar cita", acentos */
+  --brand-turquoise-light: #03CECE; /* detalles pequeños, pin de mapa */
+
+  /* Complementarios (muestreados del diseño de referencia, ajustables) */
+  --racha-oro: #FDB52B;
+  --whatsapp-green: #25D366;
+  --available-green: #04B58F;
+  --verified-blue: #0073F4;
+  --page-bg: #EAF6FE;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-brand-blue-dark: var(--brand-blue-dark);
+  --color-brand-blue: var(--brand-blue);
+  --color-brand-turquoise: var(--brand-turquoise);
+  --color-brand-turquoise-light: var(--brand-turquoise-light);
+  --color-racha-oro: var(--racha-oro);
+  --color-whatsapp-green: var(--whatsapp-green);
+  --color-available-green: var(--available-green);
+  --color-verified-blue: var(--verified-blue);
+  --color-page-bg: var(--page-bg);
   --font-sans: var(--font-plus-jakarta);
 }
 
@@ -86,4 +108,25 @@ body {
 
 .animate-pulse-dot {
   animation: pulse-dot 2s infinite ease-in-out;
+}
+
+/* Etiqueta con el nombre del médico junto al pin, estilo Google Maps: solo
+   texto con un pequeño halo, sin la caja/flecha por defecto de Leaflet. */
+.leaflet-tooltip.etiqueta-medico {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: #002174;
+  text-shadow:
+    -1px -1px 0 #fff, 1px -1px 0 #fff,
+    -1px 1px 0 #fff, 1px 1px 0 #fff,
+    0 0 4px #fff;
+  white-space: nowrap;
+}
+
+.leaflet-tooltip.etiqueta-medico::before {
+  display: none;
 }

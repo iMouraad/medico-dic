@@ -1,13 +1,15 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Check, X, Pencil, Trash2, Users, Clock, CheckCircle2, XCircle, Eye, Mail, MessageCircle } from 'lucide-react';
+import { Check, X, Pencil, Trash2, Users, Clock, CheckCircle2, XCircle, Eye, Mail, MessageCircle, Search } from 'lucide-react';
 import { createClient } from '@/app/lib/supabase/client';
-import type { Doctor } from '@/app/lib/types';
+import type { Doctor, Specialty } from '@/app/lib/types';
 import AdminEditModal from './AdminEditModal';
+import StatCard from '../dashboard/StatCard';
 
 interface Props {
     initialDoctors: Doctor[];
+    specialties: Specialty[];
 }
 
 const STATUS_BADGE: Record<Doctor['status'], string> = {
@@ -16,11 +18,12 @@ const STATUS_BADGE: Record<Doctor['status'], string> = {
     rechazado: 'bg-red-50 text-red-700 border-red-200',
 };
 
-export default function AdminPanel({ initialDoctors }: Props) {
+export default function AdminPanel({ initialDoctors, specialties }: Props) {
     const [doctors, setDoctors] = useState(initialDoctors);
     const [tab, setTab] = useState<'pendientes' | 'todos'>(
         initialDoctors.some((d) => d.status === 'pendiente') ? 'pendientes' : 'todos'
     );
+    const [query, setQuery] = useState('');
     const [editingDoctor, setEditingDoctor] = useState<Doctor | null>(null);
 
     const metrics = useMemo(() => {
@@ -28,11 +31,7 @@ export default function AdminPanel({ initialDoctors }: Props) {
         const pendientes = doctors.filter((d) => d.status === 'pendiente').length;
         const aprobados = doctors.filter((d) => d.status === 'aprobado').length;
         const rechazados = doctors.filter((d) => d.status === 'rechazado').length;
-        return { total, pendientes, aprobados, rechazados };
-    }, [doctors]);
-
-    const engagement = useMemo(() => {
-        return doctors.reduce(
+        const engagement = doctors.reduce(
             (acc, d) => ({
                 profileViews: acc.profileViews + (d.profile_views ?? 0),
                 appointmentClicks: acc.appointmentClicks + (d.appointment_clicks ?? 0),
@@ -40,11 +39,17 @@ export default function AdminPanel({ initialDoctors }: Props) {
             }),
             { profileViews: 0, appointmentClicks: 0, whatsappClicks: 0 }
         );
+        return { total, pendientes, aprobados, rechazados, ...engagement };
     }, [doctors]);
 
-    const visibleDoctors = tab === 'pendientes'
-        ? doctors.filter((d) => d.status === 'pendiente')
-        : doctors;
+    const visibleDoctors = useMemo(() => {
+        const base = tab === 'pendientes' ? doctors.filter((d) => d.status === 'pendiente') : doctors;
+        const q = query.trim().toLowerCase();
+        if (!q) return base;
+        return base.filter((d) =>
+            [d.name, d.specialty, d.city, d.email, d.ruc].filter(Boolean).some((v) => v!.toLowerCase().includes(q))
+        );
+    }, [doctors, tab, query]);
 
     const updateStatus = async (id: number, status: Doctor['status']) => {
         const supabase = createClient();
@@ -69,66 +74,47 @@ export default function AdminPanel({ initialDoctors }: Props) {
 
     return (
         <div className="flex flex-col gap-6">
-            {/* Métricas */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                {[
-                    { label: 'Total médicos', value: metrics.total, icon: Users, className: 'text-slate-600 bg-slate-50' },
-                    { label: 'Pendientes', value: metrics.pendientes, icon: Clock, className: 'text-amber-600 bg-amber-50' },
-                    { label: 'Aprobados', value: metrics.aprobados, icon: CheckCircle2, className: 'text-emerald-600 bg-emerald-50' },
-                    { label: 'Rechazados', value: metrics.rechazados, icon: XCircle, className: 'text-red-600 bg-red-50' },
-                ].map(({ label, value, icon: Icon, className }) => (
-                    <div key={label} className="bg-white rounded-2xl border border-slate-100 shadow-xs p-4 flex items-center gap-3">
-                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${className}`}>
-                            <Icon className="w-4 h-4" />
-                        </div>
-                        <div className="min-w-0">
-                            <div className="text-lg font-black text-slate-800 leading-none">{value}</div>
-                            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">{label}</div>
-                        </div>
-                    </div>
-                ))}
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4">
+                <StatCard label="Total médicos" value={metrics.total} icon={Users} color="slate" />
+                <StatCard label="Pendientes" value={metrics.pendientes} icon={Clock} color="amber" />
+                <StatCard label="Aprobados" value={metrics.aprobados} icon={CheckCircle2} color="emerald" />
+                <StatCard label="Rechazados" value={metrics.rechazados} icon={XCircle} color="red" />
+                <StatCard label="Visitas a perfiles" value={metrics.profileViews} icon={Eye} color="blue" />
+                <StatCard label="Mensajes" value={metrics.appointmentClicks} icon={Mail} color="emerald" />
+                <StatCard label="WhatsApp" value={metrics.whatsappClicks} icon={MessageCircle} color="amber" />
             </div>
 
-            {/* Engagement de la plataforma */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                {[
-                    { label: 'Visitas a perfiles', value: engagement.profileViews, icon: Eye, className: 'text-blue-600 bg-blue-50' },
-                    { label: 'Solicitudes de cita', value: engagement.appointmentClicks, icon: Mail, className: 'text-emerald-600 bg-emerald-50' },
-                    { label: 'Contactos por WhatsApp', value: engagement.whatsappClicks, icon: MessageCircle, className: 'text-amber-600 bg-amber-50' },
-                ].map(({ label, value, icon: Icon, className }) => (
-                    <div key={label} className="bg-white rounded-2xl border border-slate-100 shadow-xs p-4 flex items-center gap-3">
-                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${className}`}>
-                            <Icon className="w-4 h-4" />
-                        </div>
-                        <div className="min-w-0">
-                            <div className="text-lg font-black text-slate-800 leading-none">{value}</div>
-                            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">{label}</div>
-                        </div>
-                    </div>
-                ))}
+            <div className="flex items-center justify-between flex-wrap gap-3">
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => setTab('pendientes')}
+                        className={`text-xs font-bold px-4 py-2 rounded-xl transition-colors cursor-pointer ${
+                            tab === 'pendientes' ? 'bg-blue-600 text-white' : 'bg-white text-slate-500 border border-slate-200'
+                        }`}
+                    >
+                        Pendientes ({metrics.pendientes})
+                    </button>
+                    <button
+                        onClick={() => setTab('todos')}
+                        className={`text-xs font-bold px-4 py-2 rounded-xl transition-colors cursor-pointer ${
+                            tab === 'todos' ? 'bg-blue-600 text-white' : 'bg-white text-slate-500 border border-slate-200'
+                        }`}
+                    >
+                        Todos ({metrics.total})
+                    </button>
+                </div>
+
+                <div className="relative w-full sm:w-64">
+                    <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <input
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
+                        placeholder="Buscar médico..."
+                        className="w-full pl-10 pr-3.5 py-2 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    />
+                </div>
             </div>
 
-            {/* Tabs */}
-            <div className="flex items-center gap-2">
-                <button
-                    onClick={() => setTab('pendientes')}
-                    className={`text-xs font-bold px-4 py-2 rounded-xl transition-colors cursor-pointer ${
-                        tab === 'pendientes' ? 'bg-blue-600 text-white' : 'bg-white text-slate-500 border border-slate-200'
-                    }`}
-                >
-                    Pendientes ({metrics.pendientes})
-                </button>
-                <button
-                    onClick={() => setTab('todos')}
-                    className={`text-xs font-bold px-4 py-2 rounded-xl transition-colors cursor-pointer ${
-                        tab === 'todos' ? 'bg-blue-600 text-white' : 'bg-white text-slate-500 border border-slate-200'
-                    }`}
-                >
-                    Todos ({metrics.total})
-                </button>
-            </div>
-
-            {/* Lista */}
             <div className="bg-white rounded-2xl border border-slate-100 shadow-xs overflow-hidden">
                 {visibleDoctors.length === 0 ? (
                     <div className="p-10 text-center text-sm text-slate-400 font-medium">
@@ -196,6 +182,7 @@ export default function AdminPanel({ initialDoctors }: Props) {
             {editingDoctor && (
                 <AdminEditModal
                     doctor={editingDoctor}
+                    specialties={specialties}
                     onClose={() => setEditingDoctor(null)}
                     onSaved={(updated) => {
                         setDoctors((prev) => prev.map((d) => (d.id === updated.id ? updated : d)));

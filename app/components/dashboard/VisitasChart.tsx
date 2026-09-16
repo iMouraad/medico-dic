@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { TrendingUp } from 'lucide-react';
+import { formatFechaCorta } from '@/app/lib/dateFormat';
 
 export interface DailyPoint {
     day: string;
@@ -39,8 +40,7 @@ export default function VisitasChart({ data }: Props) {
 
     const gridLines = [0, 0.5, 1].map((t) => PAD_TOP + plotHeight * t);
 
-    const formatDate = (day: string) =>
-        new Date(`${day}T00:00:00`).toLocaleDateString('es-EC', { day: 'numeric', month: 'short' });
+    const formatDate = (day: string) => formatFechaCorta(new Date(`${day}T00:00:00`));
 
     const handleMove = (e: React.MouseEvent<SVGRectElement>) => {
         const rect = e.currentTarget.getBoundingClientRect();

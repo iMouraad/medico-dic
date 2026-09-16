@@ -3,15 +3,27 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Menu, X, LogOut, UserCircle2, LayoutDashboard, Calendar, Stethoscope } from 'lucide-react';
+import { Menu, X, LogOut, UserCircle2, LayoutDashboard, Calendar, Stethoscope, Mail, Megaphone, Settings, Users, Tag } from 'lucide-react';
 import { createClient } from '@/app/lib/supabase/client';
 
+// Los ítems de uso diario (operar la agenda) van sueltos en el sidebar; todo
+// lo que es "configurar mi cuenta una vez y volver de vez en cuando" (perfil
+// público, horario, y lo que se agregue después) vive detrás de un solo
+// ítem "Configuración" para no llenar el sidebar de secciones que no se
+// visitan todos los días.
 const NAV_ITEMS_BY_ROLE = {
     medico: [
         { href: '/dashboard', label: 'Resumen', icon: LayoutDashboard },
         { href: '/dashboard/citas', label: 'Mis citas', icon: Calendar },
+        { href: '/dashboard/pacientes', label: 'Pacientes', icon: Users },
+        { href: '/dashboard/mensajes', label: 'Mensajes', icon: Mail },
+        { href: '/dashboard/configuracion', label: 'Configuración', icon: Settings, matchPrefixes: ['/dashboard/configuracion', '/dashboard/perfil', '/dashboard/horario'] },
     ],
-    admin: [{ href: '/admin', label: 'Médicos', icon: Stethoscope }],
+    admin: [
+        { href: '/admin', label: 'Médicos', icon: Stethoscope },
+        { href: '/admin/especialidades', label: 'Especialidades', icon: Tag },
+        { href: '/admin/anuncios', label: 'Anuncios', icon: Megaphone },
+    ],
 } as const;
 
 interface Props {
@@ -59,8 +71,10 @@ export default function PanelShell({ role, title, displayName, avatarUrl, childr
             </div>
 
             <nav className="flex-1 overflow-y-auto p-3 flex flex-col gap-1">
-                {items.map(({ href, label, icon: Icon }) => {
-                    const active = pathname === href;
+                {items.map((item) => {
+                    const { href, label, icon: Icon } = item;
+                    const prefixes = 'matchPrefixes' in item ? item.matchPrefixes : undefined;
+                    const active = prefixes ? prefixes.some((p) => pathname.startsWith(p)) : pathname === href;
                     return (
                         <Link
                             key={href}

@@ -65,7 +65,7 @@ export default function Header() {
     }, []);
 
     return (
-        <header className="w-full bg-white border-b border-slate-100 sticky top-0 z-50 shadow-xs">
+        <header className="w-full bg-white border-b border-slate-100 sticky top-0 z-[1000] shadow-xs">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
                 {/* Logo */}
                 <Link href="/" className="flex items-center gap-2.5 group">
@@ -84,10 +84,10 @@ export default function Header() {
                     <Link href="/" className={navLinkClasses(pathname === '/')}>
                         Inicio
                     </Link>
-                    <Link href="#medicos" className={navLinkClasses(false)}>
+                    <Link href="/medicos" className={navLinkClasses(pathname === '/medicos')}>
                         Médicos
                     </Link>
-                    <Link href="#clinicas" className={navLinkClasses(false)}>
+                    <Link href="/clinicas" className={navLinkClasses(pathname === '/clinicas')}>
                         Clínicas
                     </Link>
                     <Link href="#socios" className={navLinkClasses(false)}>

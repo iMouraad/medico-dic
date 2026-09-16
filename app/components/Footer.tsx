@@ -57,8 +57,8 @@ export default function Footer() {
                         <h4 className="text-xs font-bold text-white uppercase tracking-widest mb-4">Enlaces rápidos</h4>
                         <ul className="space-y-2 text-xs text-slate-400">
                             <li><Link href="/" className="hover:text-blue-400 transition-colors">Inicio</Link></li>
-                            <li><Link href="#medicos" className="hover:text-blue-400 transition-colors">Médicos</Link></li>
-                            <li><Link href="#clinicas" className="hover:text-blue-400 transition-colors">Clínicas</Link></li>
+                            <li><Link href="/medicos" className="hover:text-blue-400 transition-colors">Médicos</Link></li>
+                            <li><Link href="/clinicas" className="hover:text-blue-400 transition-colors">Clínicas</Link></li>
                             <li><Link href="#socios" className="hover:text-blue-400 transition-colors">Socios comerciales</Link></li>
                             <li><a href="#" className="hover:text-blue-400 transition-colors">Preguntas frecuentes</a></li>
                         </ul>

@@ -10,15 +10,11 @@ interface Props {
     onClose: () => void;
 }
 
-export default function AgendarCitaModal({ doctor, onClose }: Props) {
-    const [form, setForm] = useState({ name: '', email: '', phone: '', preferredAt: '', reason: '' });
+export default function MensajeContactoModal({ doctor, onClose }: Props) {
+    const [form, setForm] = useState({ email: '', whatsapp: '', mensaje: '' });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
-
-    const update = (field: keyof typeof form) => (
-        e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-    ) => setForm((prev) => ({ ...prev, [field]: e.target.value }));
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -26,17 +22,15 @@ export default function AgendarCitaModal({ doctor, onClose }: Props) {
         setLoading(true);
 
         const supabase = createClient();
-        const { error: insertError } = await supabase.from('appointments').insert({
+        const { error: insertError } = await supabase.from('contact_messages').insert({
             doctor_id: doctor.id,
-            patient_name: form.name,
-            patient_email: form.email,
-            patient_phone: form.phone,
-            preferred_at: new Date(form.preferredAt).toISOString(),
-            reason: form.reason || null,
+            email: form.email,
+            whatsapp_paciente: form.whatsapp || null,
+            mensaje: form.mensaje,
         });
 
         if (insertError) {
-            setError('No se pudo enviar tu solicitud. Intenta de nuevo.');
+            setError('No se pudo enviar tu mensaje. Intenta de nuevo.');
             setLoading(false);
             return;
         }
@@ -48,7 +42,7 @@ export default function AgendarCitaModal({ doctor, onClose }: Props) {
 
     return (
         <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4"
+            className="fixed inset-0 z-[1100] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4"
             onClick={onClose}
         >
             <div
@@ -68,9 +62,9 @@ export default function AgendarCitaModal({ doctor, onClose }: Props) {
                         <div className="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center">
                             <CheckCircle2 className="w-6 h-6 text-emerald-600" />
                         </div>
-                        <h2 className="text-base font-extrabold text-slate-800">Solicitud enviada</h2>
+                        <h2 className="text-base font-extrabold text-slate-800">Mensaje enviado</h2>
                         <p className="text-xs text-slate-500 leading-relaxed">
-                            {doctor.name ?? 'El médico'} recibirá tu solicitud y se pondrá en contacto contigo para confirmar la cita.
+                            {doctor.name ?? 'El médico'} recibirá tu mensaje y decidirá cómo contactarte.
                         </p>
                         <button
                             onClick={onClose}
@@ -82,8 +76,8 @@ export default function AgendarCitaModal({ doctor, onClose }: Props) {
                 ) : (
                     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                         <div>
-                            <h2 className="text-base font-extrabold text-slate-800 mb-0.5">Agendar cita</h2>
-                            <p className="text-xs text-slate-500">con {doctor.name ?? 'este médico'}</p>
+                            <h2 className="text-base font-extrabold text-slate-800 mb-0.5">Enviar mensaje</h2>
+                            <p className="text-xs text-slate-500">a {doctor.name ?? 'este médico'}</p>
                         </div>
 
                         {error && (
@@ -94,54 +88,32 @@ export default function AgendarCitaModal({ doctor, onClose }: Props) {
                         )}
 
                         <div className="flex flex-col gap-1.5">
-                            <label className="text-xs font-bold text-slate-600">Nombre completo</label>
-                            <input
-                                required
-                                value={form.name}
-                                onChange={update('name')}
-                                className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                            />
-                        </div>
-
-                        <div className="flex flex-col gap-1.5">
                             <label className="text-xs font-bold text-slate-600">Correo electrónico</label>
                             <input
                                 type="email"
                                 required
                                 value={form.email}
-                                onChange={update('email')}
+                                onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
                                 className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                             />
                         </div>
 
                         <div className="flex flex-col gap-1.5">
-                            <label className="text-xs font-bold text-slate-600">Teléfono</label>
+                            <label className="text-xs font-bold text-slate-600">WhatsApp (opcional)</label>
                             <input
-                                required
-                                value={form.phone}
-                                onChange={update('phone')}
+                                value={form.whatsapp}
+                                onChange={(e) => setForm((p) => ({ ...p, whatsapp: e.target.value }))}
                                 className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                             />
                         </div>
 
                         <div className="flex flex-col gap-1.5">
-                            <label className="text-xs font-bold text-slate-600">Fecha y hora preferida</label>
-                            <input
-                                type="datetime-local"
-                                required
-                                value={form.preferredAt}
-                                onChange={update('preferredAt')}
-                                min={new Date().toISOString().slice(0, 16)}
-                                className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                            />
-                        </div>
-
-                        <div className="flex flex-col gap-1.5">
-                            <label className="text-xs font-bold text-slate-600">Motivo (opcional)</label>
+                            <label className="text-xs font-bold text-slate-600">Mensaje</label>
                             <textarea
-                                rows={2}
-                                value={form.reason}
-                                onChange={update('reason')}
+                                required
+                                rows={4}
+                                value={form.mensaje}
+                                onChange={(e) => setForm((p) => ({ ...p, mensaje: e.target.value }))}
                                 className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 resize-none"
                             />
                         </div>
@@ -151,7 +123,7 @@ export default function AgendarCitaModal({ doctor, onClose }: Props) {
                             disabled={loading}
                             className="mt-1 bg-blue-600 hover:bg-blue-750 disabled:opacity-60 text-white font-bold text-sm py-3 rounded-xl transition duration-200 cursor-pointer active:scale-98 shadow-sm hover:shadow-md"
                         >
-                            {loading ? 'Enviando...' : 'Enviar solicitud'}
+                            {loading ? 'Enviando...' : 'Enviar mensaje'}
                         </button>
                     </form>
                 )}

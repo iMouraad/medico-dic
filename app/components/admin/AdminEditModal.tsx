@@ -3,15 +3,17 @@
 import { useState } from 'react';
 import { X } from 'lucide-react';
 import { createClient } from '@/app/lib/supabase/client';
-import { MODALIDADES_DISPONIBLES, type Doctor } from '@/app/lib/types';
+import { DURACIONES_DISPONIBLES } from '@/app/lib/appointmentConflicts';
+import { MODALIDADES_DISPONIBLES, type Doctor, type Specialty } from '@/app/lib/types';
 
 interface Props {
     doctor: Doctor;
+    specialties: Specialty[];
     onClose: () => void;
     onSaved: (doctor: Doctor) => void;
 }
 
-export default function AdminEditModal({ doctor, onClose, onSaved }: Props) {
+export default function AdminEditModal({ doctor, specialties, onClose, onSaved }: Props) {
     const [form, setForm] = useState({
         ruc: doctor.ruc ?? '',
         name: doctor.name ?? '',
@@ -21,6 +23,7 @@ export default function AdminEditModal({ doctor, onClose, onSaved }: Props) {
         whatsapp: doctor.whatsapp ?? '',
         email: doctor.email ?? '',
         consultation_price: doctor.consultation_price?.toString() ?? '',
+        duracion_consulta_minutos: doctor.duracion_consulta_minutos ?? 30,
         bio: doctor.bio ?? '',
         modalities: doctor.modalities ?? [],
         status: doctor.status,
@@ -54,6 +57,7 @@ export default function AdminEditModal({ doctor, onClose, onSaved }: Props) {
             whatsapp: form.whatsapp,
             email: form.email || null,
             consultation_price: form.consultation_price ? Number(form.consultation_price) : null,
+            duracion_consulta_minutos: form.duracion_consulta_minutos,
             bio: form.bio || null,
             modalities: form.modalities,
             status: form.status,
@@ -74,9 +78,14 @@ export default function AdminEditModal({ doctor, onClose, onSaved }: Props) {
         if (!error && data) onSaved(data as Doctor);
     };
 
+    const specialtyOptions =
+        form.specialty && !specialties.some((s) => s.name === form.specialty)
+            ? [{ id: -1, name: form.specialty, created_at: '' }, ...specialties]
+            : specialties;
+
     return (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div className="bg-white rounded-2xl border border-slate-100 shadow-xl w-full max-w-xl max-h-[90vh] overflow-y-auto">
                 <div className="flex items-center justify-between p-5 border-b border-slate-100 sticky top-0 bg-white">
                     <h2 className="text-sm font-extrabold text-slate-800">Editar médico</h2>
                     <button onClick={onClose} className="p-1.5 rounded-full hover:bg-slate-100 text-slate-400 cursor-pointer">
@@ -96,7 +105,18 @@ export default function AdminEditModal({ doctor, onClose, onSaved }: Props) {
                         </div>
                         <div className="flex flex-col gap-1.5">
                             <label className="text-xs font-bold text-slate-600">Especialidad</label>
-                            <input value={form.specialty} onChange={update('specialty')} className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
+                            <select
+                                value={form.specialty}
+                                onChange={(e) => setForm((prev) => ({ ...prev, specialty: e.target.value }))}
+                                className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+                            >
+                                <option value="">Sin especialidad</option>
+                                {specialtyOptions.map((s) => (
+                                    <option key={s.id} value={s.name}>
+                                        {s.name}
+                                    </option>
+                                ))}
+                            </select>
                         </div>
                         <div className="flex flex-col gap-1.5">
                             <label className="text-xs font-bold text-slate-600">Ciudad</label>
@@ -117,6 +137,20 @@ export default function AdminEditModal({ doctor, onClose, onSaved }: Props) {
                         <div className="flex flex-col gap-1.5">
                             <label className="text-xs font-bold text-slate-600">Precio consulta</label>
                             <input type="number" value={form.consultation_price} onChange={update('consultation_price')} className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                            <label className="text-xs font-bold text-slate-600">Duración consulta</label>
+                            <select
+                                value={form.duracion_consulta_minutos}
+                                onChange={(e) => setForm((prev) => ({ ...prev, duracion_consulta_minutos: Number(e.target.value) }))}
+                                className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+                            >
+                                {DURACIONES_DISPONIBLES.map((min) => (
+                                    <option key={min} value={min}>
+                                        {min} minutos
+                                    </option>
+                                ))}
+                            </select>
                         </div>
                         <div className="flex flex-col gap-1.5">
                             <label className="text-xs font-bold text-slate-600">Status</label>

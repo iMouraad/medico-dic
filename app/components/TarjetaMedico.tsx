@@ -1,34 +1,35 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
-import { ShieldCheck, MapPin, Heart, Star, MessageCircle } from 'lucide-react';
+import { ShieldCheck, MapPin, Heart, MessageCircle, CalendarCheck } from 'lucide-react';
+import { getDiaSemana } from '@/app/lib/horarioAtencion';
+import { toggleFavorito, useEsFavorito } from '@/app/lib/favoritos';
+import type { HorarioAtencion } from '@/app/lib/types';
 
 interface Doctor {
     id: number;
     name: string;
     specialty: string;
     city: string;
-    consultation_price: number;
+    consultation_price: number | null;
     whatsapp: string;
     plan: string;
     profile_photo_url: string;
     modalities: string[];
     verified_senescyt: boolean;
+    horario_atencion?: HorarioAtencion | null;
 }
 
 export default function TarjetaMedico({ doctor }: { doctor: Doctor }) {
-    const [isFavorite, setIsFavorite] = useState(false);
+    const isFavorite = useEsFavorito(doctor.id);
+
+    const atiendeHoy = doctor.horario_atencion?.[getDiaSemana(new Date())]?.activo ?? false;
 
     const handleWhatsApp = () => {
         const mensaje = `Hola ${doctor.name}, vi su perfil en el directorio médico y deseo agendar una consulta.`;
         const url = `https://wa.me/${doctor.whatsapp}?text=${encodeURIComponent(mensaje)}`;
         window.open(url, '_blank');
     };
-
-    // Generar rating ficticio basado en el id para consistencia visual
-    const rating = (4.5 + (doctor.id % 5) * 0.1).toFixed(1);
-    const reviews = 50 + (doctor.id % 7) * 26;
 
     return (
         <div className={`group relative border rounded-2xl p-4 bg-white transition-all duration-300 flex flex-row items-center gap-4 hover:-translate-y-1 hover:shadow-lg ${
@@ -44,8 +45,9 @@ export default function TarjetaMedico({ doctor }: { doctor: Doctor }) {
             )}
 
             {/* Favorite Heart Icon */}
-            <button 
-                onClick={() => setIsFavorite(!isFavorite)}
+            <button
+                onClick={() => toggleFavorito(doctor.id)}
+                aria-label={isFavorite ? 'Quitar de favoritos' : 'Guardar en favoritos'}
                 className="absolute top-3 right-3 text-slate-300 hover:text-red-500 transition-colors z-10 cursor-pointer"
             >
                 <Heart className={`w-4 h-4 ${isFavorite ? 'text-red-500 fill-red-500' : ''}`} />
@@ -79,23 +81,26 @@ export default function TarjetaMedico({ doctor }: { doctor: Doctor }) {
                     </p>
 
                     {/* Location */}
-                    <div className="flex items-center gap-1 text-[11px] text-slate-400 font-medium mb-1">
+                    <div className="flex items-center gap-1 text-[11px] text-slate-400 font-medium mb-1.5">
                         <MapPin className="w-3 h-3 flex-shrink-0" />
                         <span>{doctor.city}</span>
                     </div>
 
-                    {/* Rating & Price */}
-                    <div className="flex items-center gap-1.5 text-[11px] text-slate-500">
-                        <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500 flex-shrink-0" />
-                        <span className="font-bold text-slate-700">{rating}</span>
-                        <span className="text-slate-400">({reviews} reseñas)</span>
-                    </div>
+                    {atiendeHoy && (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-available-green bg-available-green/10 border border-available-green/20 px-2 py-0.5 rounded-full w-fit">
+                            <CalendarCheck className="w-3 h-3" />
+                            Agenda disponible
+                        </span>
+                    )}
                 </div>
 
                 {/* Bottom Row: Price and WhatsApp Button */}
                 <div className="flex items-center justify-between mt-3 pt-2 border-t border-slate-50">
                     <span className="text-xs font-bold text-slate-500">
-                        Consulta: <span className="text-sm font-extrabold text-blue-600">${doctor.consultation_price}</span>
+                        Consulta:{' '}
+                        <span className="text-sm font-extrabold text-blue-600">
+                            {doctor.consultation_price != null ? `$${doctor.consultation_price}` : 'Consultar'}
+                        </span>
                     </span>
                     <div className="flex items-center gap-1.5">
                         <button

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Check, X, Clock, ArrowRight, CalendarCheck } from 'lucide-react';
 import { createClient } from '@/app/lib/supabase/client';
 import { APPOINTMENT_STATUS_LABEL, type Appointment } from '@/app/lib/types';
+import { formatFechaHora } from '@/app/lib/dateFormat';
 
 interface Props {
     initialAppointments: Appointment[];
@@ -58,7 +59,7 @@ export default function ProximasCitas({ initialAppointments }: Props) {
                                 </div>
                                 <span className="flex items-center gap-1 text-[11px] text-slate-500">
                                     <Clock className="w-3 h-3" />
-                                    {new Date(a.preferred_at).toLocaleString('es-EC', { dateStyle: 'medium', timeStyle: 'short' })}
+                                    {formatFechaHora(new Date(a.preferred_at))}
                                 </span>
                             </div>
 

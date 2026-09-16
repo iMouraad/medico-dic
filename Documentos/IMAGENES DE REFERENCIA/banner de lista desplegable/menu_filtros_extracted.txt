@@ -1,0 +1,85 @@
+
+NeosDoc
+Especificación funcional — Menú principal, Filtros de búsqueda y Tarjeta de perfil en lista
+Documento de referencia para desarrollo. Complementa las capturas de diseño ya compartidas.
+1. Menú principal
+El paciente NO tiene registro ni login en la plataforma. Todo lo relacionado a guardado de preferencias del paciente debe resolverse con almacenamiento local del dispositivo, sin cuentas de usuario.
+1.1 Barra inferior de navegación (bottom nav — siempre visible, 3 ítems)
+Ítem
+Ícono
+Acción / destino
+Inicio
+Casa
+Pantalla de búsqueda principal (home).
+Favoritos
+Corazón
+Lista de médicos guardados por el usuario. Se guarda en almacenamiento local del dispositivo (localStorage / equivalente en la app), sin necesidad de cuenta ni login.
+Mapa
+Pin
+Vista de mapa con médicos geolocalizados (Leaflet.js + OpenStreetMap).
+⚠ Nota para el desarrollador: No incluir pestaña 'Perfil' de paciente: se eliminó del menú inferior porque el paciente no tiene registro. Si el usuario reinstala la app o cambia de dispositivo, pierde sus favoritos guardados localmente — esto es una limitación aceptada del modelo sin cuentas.
+1.2 Botón de registro de médicos (visible en la pantalla de inicio)
+Además del ítem dentro del menú hamburguesa, debe existir un botón visible en la pantalla de inicio —no escondido en el menú— que invite a los médicos a registrarse. Ejemplo de ubicación: banner o botón fijo debajo del buscador principal, o en el encabezado junto al logo.
+Texto sugerido: "¿Eres médico? Regístrate gratis".
+Acción: lleva directo al flujo de registro de doctor (el mismo destino que el ítem del menú hamburguesa).
+⚠ Nota para el desarrollador: Este botón es un requisito explícito de José: la captación de médicos es el motor del directorio, por lo que la invitación a registrarse debe tener visibilidad propia en el home y no depender de que el usuario abra el menú.
+1.3 Menú hamburguesa (≡, esquina superior derecha)
+Propuesta de contenido — confirmar con José antes de construir. No incluye login de paciente (no existe registro de pacientes):
+Soy médico — Regístrate gratis (lleva al flujo de registro de doctor, el único que requiere cuenta)
+Cómo funciona NeosDoc
+Contacto / Soporte
+Términos y condiciones / Política de privacidad / Cookies
+⚠ Nota para el desarrollador: Esta sección (1.3) es una propuesta inicial, no una especificación cerrada. Confirmar el listado final antes de implementar.
+2. Filtros de búsqueda
+Todos los filtros son opcionales (no bloquean la búsqueda). Cada bloque es un acordeón desplegable independiente dentro del modal "Filtros de búsqueda".
+Regla de escritura libre: en TODOS los filtros con lista desplegable, si el usuario no encuentra su opción en la lista, debe poder escribirla manualmente en el mismo campo de búsqueda del bloque. Ese texto libre se guarda como un valor adicional de filtro (no reemplaza la selección de checkboxes) y se usa en la búsqueda igual que si fuera una opción de la lista.
+Filtrado incremental: el campo de búsqueda de cada bloque (Especialidad, Ubicación, Sector) debe reducir las opciones de la lista en tiempo real, letra por letra, a medida que el usuario escribe — no debe requerir escribir la palabra completa ni presionar un botón de buscar. Con una sola letra ya debe acotar las opciones mostradas.
+2.1 Especialidad
+Campo de búsqueda interno con autocompletado sobre la lista de especialidades.
+Selección múltiple mediante checkboxes.
+Si el texto escrito no coincide con ninguna especialidad de la lista, mostrar opción: "Usar '{texto escrito}' como especialidad" y agregarla como filtro de texto libre.
+2.2 Ubicación
+Campo de búsqueda interno con autocompletado sobre ciudades (y sector/barrio si aplica).
+Selección múltiple (ej. Quito + Guayaquil a la vez).
+Mismo comportamiento de texto libre que Especialidad si la ciudad/sector no está en la lista.
+⚠ Nota para el desarrollador: El listado de ciudades crecerá con el tiempo (planeado incluir Babahoyo, Quevedo y otras ciudades intermedias, no solo las principales). El filtrado incremental descrito arriba es especialmente importante aquí para que el usuario no dependa de hacer scroll en una lista larga.
+2.3 Sector (opcional)
+Dropdown de tipo de establecimiento: Clínica privada, Hospital, Consultorio particular, Centro médico, Otro.
+Mismo comportamiento de texto libre para "Otro".
+2.4 Precios (opcional)
+Rango de precio predefinido (ej. $, $$, $$$) mediante selección única o de rango.
+Incluir opción "No especificado" para médicos que no publican tarifa.
+2.5 Lógica de combinación de resultados
+Regla:
+Entre filtros de distinto tipo (Especialidad + Ubicación + Sector + Precio): lógica AND. Cada filtro que se agrega reduce la lista de resultados.
+Dentro de un mismo filtro, si se marcan varias opciones a la vez (ej. dos ciudades, o dos especialidades): lógica OR entre esas opciones. No puede ser AND, porque ningún médico pertenece a dos ciudades a la vez — el resultado sería siempre cero.
+Ejemplo:
+Sin ningún filtro → salen todos los médicos.
+Ciudad = Quito → salen todos los médicos de Quito.
+Ciudad = Quito + Sector = Iñaquito → salen los médicos de Quito, en Iñaquito o alrededores (Ciudad y Sector se combinan con AND).
+Ciudad = Quito + Especialidad = Cardiología → salen los cardiólogos de Quito (AND entre Ciudad y Especialidad).
+Ciudad = Quito + Ciudad = Guayaquil (ambas marcadas en el mismo filtro) → salen los médicos de Quito o de Guayaquil (OR dentro del filtro de Ciudad).
+⚠ Nota para el desarrollador: Confirmar esta regla con José antes de programar el motor de búsqueda. El riesgo es que el desarrollador aplique AND también entre opciones marcadas dentro del mismo filtro (ej. Quito Y Guayaquil a la vez), lo cual siempre devolvería cero resultados.
+3. Tarjeta de perfil (previsualización en la lista de resultados)
+Cada resultado de búsqueda se muestra como una tarjeta (card). Al tocar la tarjeta, se navega al perfil completo del médico.
+Elemento
+Descripción
+Foto de perfil
+Imagen circular del médico.
+Nombre
+Prefijo (Dr. / Dra.) + nombre completo.
+Especialidad
+Texto debajo del nombre, en color de acento.
+Ubicación
+Ícono de pin + ciudad y sector/barrio.
+Estado de agenda
+Badge de disponibilidad. Unificar el texto exacto (ej. "Agenda disponible") — actualmente aparece en dos variantes distintas en las capturas de referencia.
+Botón de WhatsApp
+Ícono circular verde. Acción: abrir enlace wa.me/{número del médico}, no un formulario interno.
+Flecha de acceso
+Ícono ">" a la derecha; al darle click a la tarjeta entrar añ perfil completo
+3.1 Encabezado de la lista (por encima de las tarjetas)
+Barra de búsqueda con el texto ingresado (especialidad/médico) + botón de volver.
+Campo de ubicación seleccionada + ícono de filtros (abre el modal de la sección 2).
+Contador de resultados: "Mostrando N médicos". Debe recalcularse dinámicamente según los filtros aplicados.
+⚠ Nota para el desarrollador: En las capturas de referencia el contador se mantiene fijo en "24 médicos" al cambiar de ciudad/filtro. Verificar que en la implementación real este número sí se recalcule; si no, es un bug funcional.

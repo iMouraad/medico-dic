@@ -1,0 +1,60 @@
+NEOSDOC
+Paleta de colores exacta — Perfil público del médico
+Códigos hexadecimales para reproducir el diseño de referencia tal cual
+1. Colores oficiales de marca NEOSDOC (fuente principal)
+Estos son los colores oficiales de la marca, ya definidos. Deben usarse en todo elemento que represente identidad de NEOSDOC: header, textos principales, botones de marca, insignias.
+
+Nombre
+Código
+Uso principal
+
+Azul oscuro
+#002174
+Textos principales (nombre del médico), fondo de header/franjas oscuras, logo.
+
+Azul medio
+#003FA3
+Textos secundarios (especialidad, enlaces), insignia "Médico Fundador", íconos.
+
+Turquesa
+#01B5BD
+Botón "Agendar cita", acentos, elementos interactivos destacados.
+
+Turquesa claro
+#03CECE
+Detalles pequeños, pin de mapa, acentos secundarios.
+
+2. Colores complementarios (extraídos de la imagen de referencia)
+Estos colores no forman parte de la paleta oficial de marca — se usan como acentos funcionales/semánticos (estados, notificaciones de terceros como WhatsApp). Fueron muestreados directamente de la imagen de referencia compartida.
+
+Nombre
+Código
+Uso principal
+
+Dorado (Racha Oro)
+#FDB52B
+Fondo de la insignia de racha nivel Oro.
+
+Verde WhatsApp
+#25D366
+Botón "Contactar por WhatsApp" — usar el verde oficial de marca WhatsApp, no el de la imagen (más preciso para reconocimiento del usuario).
+
+Verde disponibilidad
+#04B58F
+Indicador de "Agenda disponible" y día resaltado en el horario semanal.
+
+Azul brillante (verificado)
+#0073F4
+Fondo del sello "Perfil verificado por NeosDoc" e ícono de check junto al nombre.
+
+Fondo general de página
+#EAF6FE
+Color de fondo detrás de las tarjetas blancas, en toda la pantalla.
+
+Fondo de tarjetas
+#FFFFFF
+Fondo blanco de cada sección/tarjeta del perfil.
+
+3. Nota importante sobre precisión de estos colores
+La imagen de referencia fue generada por una IA de imágenes (ChatGPT), no es un archivo de diseño real (Figma, Sketch, etc.) — por lo tanto, sus colores no son "oficiales" por definición, solo una aproximación visual de lo que se buscaba lograr. Los códigos de la sección 1 (marca NEOSDOC) son los que deben respetarse siempre, sin excepción. Los códigos de la sección 2 fueron extraídos por muestreo directo de píxeles de la imagen y sirven como referencia cercana, pero el desarrollador tiene libertad de ajustarlos ligeramente si algún tono no se ve bien en pantalla real.
+Los fondos claros de los íconos circulares (ej. detrás del ícono de especialidad o formación académica) no necesitan un código fijo — se recomienda generarlos como el color de marca correspondiente (Azul medio o Turquesa) al 10-12% de opacidad sobre blanco, para que se ajusten automáticamente si la paleta cambia en el futuro.
