@@ -135,6 +135,7 @@ export default function AdminPanel({ initialDoctors, specialties }: Props) {
                                     </div>
                                     <span className="text-xs text-slate-500">
                                         {[doctor.specialty, doctor.city].filter(Boolean).join(' · ') || doctor.email}
+                                        {doctor.username && <span className="text-slate-400"> · @{doctor.username}</span>}
                                         {doctor.ruc && <span className="text-slate-400"> · RUC {doctor.ruc}</span>}
                                     </span>
                                 </div>

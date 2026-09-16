@@ -3,6 +3,7 @@ export interface Doctor {
     user_id: string | null;
     ruc: string | null;
     name: string | null;
+    username: string | null;
     specialty: string | null;
     city: string | null;
     address: string | null;

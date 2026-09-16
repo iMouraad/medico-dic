@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Stethoscope, AlertCircle, MailCheck } from 'lucide-react';
 import { createClient } from '@/app/lib/supabase/client';
@@ -11,13 +10,7 @@ import Footer from '@/app/components/Footer';
 const RUC_REGEX = /^\d{13}$/;
 
 export default function RegistroPage() {
-    const router = useRouter();
-    const [form, setForm] = useState({
-        email: '',
-        ruc: '',
-        password: '',
-        confirmPassword: '',
-    });
+    const [form, setForm] = useState({ nombreCompleto: '', email: '', ruc: '' });
     const [aceptaOfertasComerciales, setAceptaOfertasComerciales] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
@@ -30,51 +23,50 @@ export default function RegistroPage() {
         e.preventDefault();
         setError('');
 
+        if (!form.nombreCompleto.trim()) {
+            setError('Ingresa tu nombre completo.');
+            return;
+        }
         if (!RUC_REGEX.test(form.ruc)) {
             setError('El RUC debe tener 13 dígitos.');
-            return;
-        }
-        if (form.password.length < 6) {
-            setError('La contraseña debe tener al menos 6 caracteres.');
-            return;
-        }
-        if (form.password !== form.confirmPassword) {
-            setError('Las contraseñas no coinciden.');
             return;
         }
 
         setLoading(true);
         const supabase = createClient();
 
-        const { data, error: signUpError } = await supabase.auth.signUp({
-            email: form.email,
-            password: form.password,
-            options: {
-                data: { ruc: form.ruc, acepta_ofertas_comerciales: aceptaOfertasComerciales },
-            },
-        });
-
-        if (signUpError || !data.user) {
-            setError(signUpError?.message === 'User already registered'
-                ? 'Ya existe una cuenta con ese correo.'
-                : 'No se pudo crear la cuenta. Intenta de nuevo.');
+        const { data: rucDisponible } = await supabase.rpc('ruc_disponible', { p_ruc: form.ruc });
+        if (rucDisponible === false) {
+            setError('Ya existe una cuenta registrada con ese RUC.');
             setLoading(false);
             return;
         }
 
+        // Sin contraseña todavía: se manda un enlace de acceso al correo y
+        // recién al confirmarlo (en /registro/completar) el médico elige su
+        // contraseña. El nombre y el RUC van en la metadata para que el
+        // trigger del lado del servidor cree la fila inicial en doctors
+        // (incluyendo el username autogenerado a partir del nombre).
+        const { error: otpError } = await supabase.auth.signInWithOtp({
+            email: form.email,
+            options: {
+                data: {
+                    nombre_completo: form.nombreCompleto.trim(),
+                    ruc: form.ruc,
+                    acepta_ofertas_comerciales: aceptaOfertasComerciales,
+                },
+                emailRedirectTo: `${window.location.origin}/registro/completar`,
+            },
+        });
+
         setLoading(false);
 
-        if (!data.session) {
-            // "Confirm email" está activo en Supabase Auth: no hay sesión
-            // todavía. La fila en doctors ya se creó igual, desde el
-            // trigger del lado del servidor, así que solo falta que
-            // confirme el correo e inicie sesión para completar su perfil.
-            setAwaitingConfirmation(true);
+        if (otpError) {
+            setError('No se pudo enviar el enlace de confirmación. Intenta de nuevo.');
             return;
         }
 
-        router.push('/dashboard');
-        router.refresh();
+        setAwaitingConfirmation(true);
     };
 
     if (awaitingConfirmation) {
@@ -88,15 +80,9 @@ export default function RegistroPage() {
                         </div>
                         <h1 className="text-lg font-extrabold text-slate-800">Revisa tu correo</h1>
                         <p className="text-xs text-slate-500 leading-relaxed">
-                            Te enviamos un enlace de confirmación a <strong>{form.email}</strong>.
-                            Confírmalo y luego inicia sesión para completar tu perfil médico.
+                            Te enviamos un enlace a <strong>{form.email}</strong>. Ábrelo para
+                            confirmar tu cuenta y elegir tu contraseña.
                         </p>
-                        <Link
-                            href="/login"
-                            className="mt-2 bg-blue-600 hover:bg-blue-750 text-white font-bold text-sm px-6 py-2.5 rounded-xl transition duration-200"
-                        >
-                            Ir a iniciar sesión
-                        </Link>
                     </div>
                 </main>
                 <Footer />
@@ -115,8 +101,9 @@ export default function RegistroPage() {
                         </div>
                         <h1 className="text-lg font-extrabold text-slate-800">Regístrate como médico</h1>
                         <p className="text-xs text-slate-500 text-center">
-                            Tu perfil es 100% gratis. Después de crear tu cuenta, completas tus
-                            datos médicos en tu panel y un admin de NEOSDOC lo revisa antes de publicarlo.
+                            Tu perfil es 100% gratis. Te enviamos un enlace para confirmar tu
+                            correo y elegir tu contraseña; luego completas tus datos médicos en
+                            tu panel y un admin de NEOSDOC lo revisa antes de publicarlo.
                         </p>
                     </div>
 
@@ -126,6 +113,17 @@ export default function RegistroPage() {
                             <span>{error}</span>
                         </div>
                     )}
+
+                    <div className="flex flex-col gap-1.5">
+                        <label className="text-xs font-bold text-slate-600">Nombre completo</label>
+                        <input
+                            required
+                            value={form.nombreCompleto}
+                            onChange={update('nombreCompleto')}
+                            className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                            placeholder="Nombres y apellidos"
+                        />
+                    </div>
 
                     <div className="flex flex-col gap-1.5">
                         <label className="text-xs font-bold text-slate-600">Correo electrónico</label>
@@ -152,30 +150,6 @@ export default function RegistroPage() {
                         />
                     </div>
 
-                    <div className="flex flex-col gap-1.5">
-                        <label className="text-xs font-bold text-slate-600">Contraseña</label>
-                        <input
-                            type="password"
-                            required
-                            value={form.password}
-                            onChange={update('password')}
-                            className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                            placeholder="Mínimo 6 caracteres"
-                        />
-                    </div>
-
-                    <div className="flex flex-col gap-1.5">
-                        <label className="text-xs font-bold text-slate-600">Confirmar contraseña</label>
-                        <input
-                            type="password"
-                            required
-                            value={form.confirmPassword}
-                            onChange={update('confirmPassword')}
-                            className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                            placeholder="••••••••"
-                        />
-                    </div>
-
                     <label className="flex items-start gap-2.5 text-xs text-slate-500 leading-relaxed cursor-pointer">
                         <input
                             type="checkbox"
@@ -194,7 +168,7 @@ export default function RegistroPage() {
                         disabled={loading}
                         className="mt-2 bg-blue-600 hover:bg-blue-750 disabled:opacity-60 text-white font-bold text-sm py-3 rounded-xl transition duration-200 cursor-pointer active:scale-98 shadow-sm hover:shadow-md"
                     >
-                        {loading ? 'Creando cuenta...' : 'Crear mi cuenta'}
+                        {loading ? 'Enviando enlace...' : 'Continuar'}
                     </button>
 
                     <p className="text-center text-xs text-slate-500 mt-1">
