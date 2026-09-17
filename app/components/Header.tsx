@@ -39,7 +39,7 @@ export default function Header() {
                 .single();
 
             const isAdmin = profile?.role === 'admin';
-            setPanelHref(isAdmin ? '/admin' : '/dashboard');
+            setPanelHref(isAdmin ? '/admin/panel' : '/dashboard');
 
             if (isAdmin) {
                 setAvatarUrl(null);

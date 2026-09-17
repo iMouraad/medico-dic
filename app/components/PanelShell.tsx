@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Menu, X, LogOut, UserCircle2, LayoutDashboard, Calendar, Stethoscope, Mail, Megaphone, Settings, Users, Tag } from 'lucide-react';
+import { Menu, X, LogOut, UserCircle2, LayoutDashboard, Calendar, Stethoscope, Mail, Settings, Users, Tag, Megaphone, History } from 'lucide-react';
 import { createClient } from '@/app/lib/supabase/client';
 
 // Los ítems de uso diario (operar la agenda) van sueltos en el sidebar; todo
@@ -11,18 +11,31 @@ import { createClient } from '@/app/lib/supabase/client';
 // público, horario, y lo que se agregue después) vive detrás de un solo
 // ítem "Configuración" para no llenar el sidebar de secciones que no se
 // visitan todos los días.
-const NAV_ITEMS_BY_ROLE = {
+const NAV_GROUPS_BY_ROLE = {
     medico: [
-        { href: '/dashboard', label: 'Resumen', icon: LayoutDashboard },
-        { href: '/dashboard/citas', label: 'Mis citas', icon: Calendar },
-        { href: '/dashboard/pacientes', label: 'Pacientes', icon: Users },
-        { href: '/dashboard/mensajes', label: 'Mensajes', icon: Mail },
-        { href: '/dashboard/configuracion', label: 'Configuración', icon: Settings, matchPrefixes: ['/dashboard/configuracion', '/dashboard/perfil', '/dashboard/horario'] },
+        {
+            label: 'PANEL MÉDICO',
+            items: [
+                { href: '/dashboard', label: 'Resumen', icon: LayoutDashboard },
+                { href: '/dashboard/citas', label: 'Mis citas', icon: Calendar },
+                { href: '/dashboard/pacientes', label: 'Pacientes', icon: Users },
+                { href: '/dashboard/mensajes', label: 'Mensajes', icon: Mail },
+                { href: '/dashboard/configuracion', label: 'Configuración', icon: Settings, matchPrefixes: ['/dashboard/configuracion', '/dashboard/perfil', '/dashboard/horario'] },
+            ],
+        },
     ],
     admin: [
-        { href: '/admin', label: 'Médicos', icon: Stethoscope },
-        { href: '/admin/especialidades', label: 'Especialidades', icon: Tag },
-        { href: '/admin/anuncios', label: 'Anuncios', icon: Megaphone },
+        {
+            label: 'PANEL ADMINISTRATIVO',
+            items: [
+                { href: '/admin/panel', label: 'Resumen', icon: LayoutDashboard },
+                { href: '/admin', label: 'Médicos', icon: Stethoscope },
+                { href: '/admin/usuarios', label: 'Usuarios', icon: Users },
+                { href: '/admin/especialidades', label: 'Especialidades', icon: Tag },
+                { href: '/admin/anuncios', label: 'Anuncios', icon: Megaphone },
+                { href: '/admin/auditoria', label: 'Auditoría', icon: History },
+            ],
+        },
     ],
 } as const;
 
@@ -38,7 +51,8 @@ export default function PanelShell({ role, title, displayName, avatarUrl, childr
     const pathname = usePathname();
     const router = useRouter();
     const [drawerOpen, setDrawerOpen] = useState(false);
-    const items = NAV_ITEMS_BY_ROLE[role];
+    const groups = NAV_GROUPS_BY_ROLE[role];
+    const logoHref = role === 'admin' ? '/admin/panel' : '/';
 
     const handleLogout = async () => {
         const supabase = createClient();
@@ -61,7 +75,7 @@ export default function PanelShell({ role, title, displayName, avatarUrl, childr
     const sidebarBody = (
         <>
             <div className="p-5 border-b border-blue-200/70">
-                <Link href="/" className="flex items-center gap-2.5">
+                <Link href={logoHref} className="flex items-center gap-2.5">
                     <img src="/logo.jpg" alt="NEOSDOC" className="w-9 h-9 rounded-xl object-cover flex-shrink-0" />
                     <span className="text-lg font-extrabold text-slate-800 tracking-tight">
                         NEOS<span className="text-blue-600">DOC</span>
@@ -70,27 +84,34 @@ export default function PanelShell({ role, title, displayName, avatarUrl, childr
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-3">{title}</p>
             </div>
 
-            <nav className="flex-1 overflow-y-auto p-3 flex flex-col gap-1">
-                {items.map((item) => {
-                    const { href, label, icon: Icon } = item;
-                    const prefixes = 'matchPrefixes' in item ? item.matchPrefixes : undefined;
-                    const active = prefixes ? prefixes.some((p) => pathname.startsWith(p)) : pathname === href;
-                    return (
-                        <Link
-                            key={href}
-                            href={href}
-                            onClick={() => setDrawerOpen(false)}
-                            className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
-                                active
-                                    ? 'bg-white text-blue-700 shadow-xs'
-                                    : 'text-slate-600 hover:bg-white/70 hover:text-slate-800'
-                            }`}
-                        >
-                            <Icon className="w-4 h-4 flex-shrink-0" />
-                            {label}
-                        </Link>
-                    );
-                })}
+            <nav className="flex-1 overflow-y-auto p-3 flex flex-col gap-4">
+                {groups.map((group) => (
+                    <div key={group.label} className="flex flex-col gap-1">
+                        <p className="px-3.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                            {group.label}
+                        </p>
+                        {group.items.map((item) => {
+                            const { href, label, icon: Icon } = item;
+                            const prefixes = 'matchPrefixes' in item ? item.matchPrefixes : undefined;
+                            const active = prefixes ? prefixes.some((p) => pathname.startsWith(p)) : pathname === href;
+                            return (
+                                <Link
+                                    key={href}
+                                    href={href}
+                                    onClick={() => setDrawerOpen(false)}
+                                    className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
+                                        active
+                                            ? 'bg-white text-blue-700 shadow-xs'
+                                            : 'text-slate-600 hover:bg-white/70 hover:text-slate-800'
+                                    }`}
+                                >
+                                    <Icon className="w-4 h-4 flex-shrink-0" />
+                                    {label}
+                                </Link>
+                            );
+                        })}
+                    </div>
+                ))}
             </nav>
 
             <div className="p-3 border-t border-blue-200/70 flex flex-col gap-2">
@@ -146,7 +167,7 @@ export default function PanelShell({ role, title, displayName, avatarUrl, childr
             <div className="flex-1 flex flex-col min-w-0">
                 {/* Topbar móvil */}
                 <div className="md:hidden sticky top-0 z-40 bg-white border-b border-slate-100 h-14 flex items-center justify-between px-4">
-                    <Link href="/" className="flex items-center gap-2">
+                    <Link href={logoHref} className="flex items-center gap-2">
                         <img src="/logo.jpg" alt="NEOSDOC" className="w-7 h-7 rounded-lg object-cover" />
                         <span className="text-sm font-extrabold text-slate-800">
                             NEOS<span className="text-blue-600">DOC</span>

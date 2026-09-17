@@ -46,7 +46,7 @@ function LoginForm() {
             .eq('id', data.user.id)
             .single();
 
-        router.push(profile?.role === 'admin' ? '/admin' : '/dashboard');
+        router.push(profile?.role === 'admin' ? '/admin/panel' : '/dashboard');
         router.refresh();
     };
 

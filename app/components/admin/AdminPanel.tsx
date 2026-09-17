@@ -1,11 +1,10 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Check, X, Pencil, Trash2, Users, Clock, CheckCircle2, XCircle, Eye, Mail, MessageCircle, Search } from 'lucide-react';
+import { Check, X, Pencil, Trash2, Search } from 'lucide-react';
 import { createClient } from '@/app/lib/supabase/client';
 import type { Doctor, Specialty } from '@/app/lib/types';
 import AdminEditModal from './AdminEditModal';
-import StatCard from '../dashboard/StatCard';
 
 interface Props {
     initialDoctors: Doctor[];
@@ -29,17 +28,7 @@ export default function AdminPanel({ initialDoctors, specialties }: Props) {
     const metrics = useMemo(() => {
         const total = doctors.length;
         const pendientes = doctors.filter((d) => d.status === 'pendiente').length;
-        const aprobados = doctors.filter((d) => d.status === 'aprobado').length;
-        const rechazados = doctors.filter((d) => d.status === 'rechazado').length;
-        const engagement = doctors.reduce(
-            (acc, d) => ({
-                profileViews: acc.profileViews + (d.profile_views ?? 0),
-                appointmentClicks: acc.appointmentClicks + (d.appointment_clicks ?? 0),
-                whatsappClicks: acc.whatsappClicks + (d.whatsapp_clicks ?? 0),
-            }),
-            { profileViews: 0, appointmentClicks: 0, whatsappClicks: 0 }
-        );
-        return { total, pendientes, aprobados, rechazados, ...engagement };
+        return { total, pendientes };
     }, [doctors]);
 
     const visibleDoctors = useMemo(() => {
@@ -74,16 +63,6 @@ export default function AdminPanel({ initialDoctors, specialties }: Props) {
 
     return (
         <div className="flex flex-col gap-6">
-            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4">
-                <StatCard label="Total médicos" value={metrics.total} icon={Users} color="slate" />
-                <StatCard label="Pendientes" value={metrics.pendientes} icon={Clock} color="amber" />
-                <StatCard label="Aprobados" value={metrics.aprobados} icon={CheckCircle2} color="emerald" />
-                <StatCard label="Rechazados" value={metrics.rechazados} icon={XCircle} color="red" />
-                <StatCard label="Visitas a perfiles" value={metrics.profileViews} icon={Eye} color="blue" />
-                <StatCard label="Mensajes" value={metrics.appointmentClicks} icon={Mail} color="emerald" />
-                <StatCard label="WhatsApp" value={metrics.whatsappClicks} icon={MessageCircle} color="amber" />
-            </div>
-
             <div className="flex items-center justify-between flex-wrap gap-3">
                 <div className="flex items-center gap-2">
                     <button

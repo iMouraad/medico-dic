@@ -11,6 +11,9 @@ export interface DailyPoint {
 
 interface Props {
     data: DailyPoint[];
+    titulo?: string;
+    unidadSingular?: string;
+    unidadPlural?: string;
 }
 
 const WIDTH = 560;
@@ -20,7 +23,12 @@ const PAD_RIGHT = 8;
 const PAD_TOP = 12;
 const PAD_BOTTOM = 24;
 
-export default function VisitasChart({ data }: Props) {
+export default function VisitasChart({
+    data,
+    titulo = 'Visitas al perfil',
+    unidadSingular = 'visita',
+    unidadPlural = 'visitas',
+}: Props) {
     const [hoverIndex, setHoverIndex] = useState<number | null>(null);
 
     const total = useMemo(() => data.reduce((sum, d) => sum + d.profile_views, 0), [data]);
@@ -61,7 +69,7 @@ export default function VisitasChart({ data }: Props) {
                         <TrendingUp className="w-4 h-4" />
                     </div>
                     <div>
-                        <div className="text-sm font-extrabold text-slate-800 leading-none">Visitas al perfil</div>
+                        <div className="text-sm font-extrabold text-slate-800 leading-none">{titulo}</div>
                         <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">
                             Últimos {data.length} días · {total} en total
                         </div>
@@ -146,7 +154,7 @@ export default function VisitasChart({ data }: Props) {
                                 top: `${(hovered.y / HEIGHT) * 100 - 4}%`,
                             }}
                         >
-                            {formatDate(hovered.day)} · {hovered.profile_views} visita{hovered.profile_views === 1 ? '' : 's'}
+                            {formatDate(hovered.day)} · {hovered.profile_views} {hovered.profile_views === 1 ? unidadSingular : unidadPlural}
                         </div>
                     )}
                 </div>
